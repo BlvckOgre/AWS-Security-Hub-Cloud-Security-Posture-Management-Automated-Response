@@ -115,4 +115,133 @@ This project supports **both Terraform and CloudFormation**, reflecting real-wor
 
 ### 📁 Directory Structure
 
+terraform/
+├── main.tf
+├── securityhub.tf
+├── eventbridge.tf
+├── lambda.tf
+├── iam.tf
+└── variables.tf
+
+lambda/
+└── auto_remediate_s3_public_access.py
+
+
+---
+
+### 🔐 Enable AWS Security Hub
+
+```hcl
+resource "aws_securityhub_account" "this" {}
+
+📊 Enable AWS Foundational Security Best Practices
+resource "aws_securityhub_standards_subscription" "aws_best_practices" {
+  standards_arn = "arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0"
+}
+
+🚨 EventBridge Rule for Critical Findings
+resource "aws_cloudwatch_event_rule" "securityhub_critical" {
+  name = "securityhub-critical-findings"
+
+  event_pattern = jsonencode({
+    source      = ["aws.securityhub"],
+    detail-type = ["Security Hub Findings - Imported"],
+    detail = {
+      findings = {
+        Severity = {
+          Label = ["CRITICAL"]
+        }
+      }
+    }
+  })
+}
+
+🎯 EventBridge → Lambda Target
+resource "aws_cloudwatch_event_target" "lambda_target" {
+  rule = aws_cloudwatch_event_rule.securityhub_critical.name
+  arn  = aws_lambda_function.auto_remediate.arn
+}
+
+🤖 Lambda Auto-Remediation Example
+Use Case
+
+Automatically block public access on S3 buckets when flagged by Security Hub.
+
+Lambda Function (Python)
+import json
+import boto3
+
+s3 = boto3.client("s3")
+
+def lambda_handler(event, context):
+    findings = event["detail"]["findings"]
+
+    for finding in findings:
+        for resource in finding.get("Resources", []):
+            if resource["Type"] == "AwsS3Bucket":
+                bucket = resource["Id"].split(":::")[-1]
+
+                s3.put_public_access_block(
+                    Bucket=bucket,
+                    PublicAccessBlockConfiguration={
+                        "BlockPublicAcls": True,
+                        "IgnorePublicAcls": True,
+                        "BlockPublicPolicy": True,
+                        "RestrictPublicBuckets": True
+                    }
+                )
+
+    return {"status": "remediation complete"}
+
+☁️ CloudFormation Alternative
+AWSTemplateFormatVersion: "2010-09-09"
+
+Resources:
+  SecurityHub:
+    Type: AWS::SecurityHub::Hub
+
+  SecurityStandard:
+    Type: AWS::SecurityHub::StandardsSubscription
+    Properties:
+      StandardsArn: arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0
+
+⚠️ Operational Challenges (The Real Work)
+
+Turning on Security Hub is easy. Operating it well is hard.
+
+Key challenges include:
+
+Reducing noisy findings
+
+Aligning alerts to real risk
+
+Designing centralised security accounts
+
+Routing findings into operational workflows
+
+Automating remediation safely
+
+Security Hub delivers value only when paired with process, automation, and ownership.
+
+🏗️ Best Practices Applied
+
+Deploy via Infrastructure as Code
+
+Centralise findings across accounts
+
+Focus automation on high-confidence issues
+
+Keep humans in the loop for destructive actions
+
+Continuously tune controls and severity thresholds
+
+🧯 Disable After Testing
+
+To avoid unexpected costs:
+
+Security Hub → Settings → General → Disable
+
+
+Always disable unused services in lab environments.
+
 
