@@ -131,18 +131,22 @@ lambda/
 
 ### 🔐 Enable AWS Security Hub
 
-```hcl
-resource "aws_securityhub_account" "this" {}```
+```
+resource "aws_securityhub_account" "this" {}
+```
 
 📊 Enable AWS Foundational Security Best Practices
 resource "aws_securityhub_standards_subscription" "aws_best_practices"
-```{
+```
+{
   standards_arn = "arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0"
-}```
+}
+```
 
 ### 🚨 EventBridge Rule for Critical Findings
 resource "aws_cloudwatch_event_rule" "securityhub_critical"
-```{
+```
+{
   name = "securityhub-critical-findings"
 
   event_pattern = jsonencode({
@@ -156,14 +160,17 @@ resource "aws_cloudwatch_event_rule" "securityhub_critical"
       }
     }
   })
-}```
+}
+```
 
 ### 🎯 EventBridge → Lambda Target
 resource "aws_cloudwatch_event_target" "lambda_target"
-```{
+```
+{
   rule = aws_cloudwatch_event_rule.securityhub_critical.name
   arn  = aws_lambda_function.auto_remediate.arn
-}```
+}
+```
 
 ### 🤖 Lambda Auto-Remediation Example
 Use Case
@@ -171,7 +178,8 @@ Use Case
 Automatically block public access on S3 buckets when flagged by Security Hub.
 
 Lambda Function (Python)
-```import json
+```
+import json
 import boto3
 
 s3 = boto3.client("s3")
@@ -194,11 +202,12 @@ def lambda_handler(event, context):
                     }
                 )
 
-    return {"status": "remediation complete"}```
+    return {"status": "remediation complete"}
+```
 
 ☁️ CloudFormation Alternative
 AWSTemplateFormatVersion: "2010-09-09"
-
+```
 Resources:
   SecurityHub:
     Type: AWS::SecurityHub::Hub
@@ -206,7 +215,8 @@ Resources:
   SecurityStandard:
     Type: AWS::SecurityHub::StandardsSubscription
     Properties:
-      StandardsArn: arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0```
+      StandardsArn: arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0
+  ```
 
 ### ⚠️ Operational Challenges (The Real Work)
 
@@ -242,7 +252,9 @@ Continuously tune controls and severity thresholds
 
 To avoid unexpected costs:
 
-```Security Hub → Settings → General → Disable```
+```
+Security Hub → Settings → General → Disable
+```
 
 
 Always disable unused services in lab environments.
