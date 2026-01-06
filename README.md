@@ -139,7 +139,7 @@ resource "aws_securityhub_standards_subscription" "aws_best_practices" {
   standards_arn = "arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0"
 }
 
-🚨 EventBridge Rule for Critical Findings
+### 🚨 EventBridge Rule for Critical Findings
 resource "aws_cloudwatch_event_rule" "securityhub_critical" {
   name = "securityhub-critical-findings"
 
@@ -156,13 +156,13 @@ resource "aws_cloudwatch_event_rule" "securityhub_critical" {
   })
 }
 
-🎯 EventBridge → Lambda Target
+### 🎯 EventBridge → Lambda Target
 resource "aws_cloudwatch_event_target" "lambda_target" {
   rule = aws_cloudwatch_event_rule.securityhub_critical.name
   arn  = aws_lambda_function.auto_remediate.arn
 }
 
-🤖 Lambda Auto-Remediation Example
+### 🤖 Lambda Auto-Remediation Example
 Use Case
 
 Automatically block public access on S3 buckets when flagged by Security Hub.
@@ -205,7 +205,7 @@ Resources:
     Properties:
       StandardsArn: arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0
 
-⚠️ Operational Challenges (The Real Work)
+### ⚠️ Operational Challenges (The Real Work)
 
 Turning on Security Hub is easy. Operating it well is hard.
 
@@ -223,7 +223,7 @@ Automating remediation safely
 
 Security Hub delivers value only when paired with process, automation, and ownership.
 
-🏗️ Best Practices Applied
+### 🏗️ Best Practices Applied
 
 Deploy via Infrastructure as Code
 
@@ -235,7 +235,7 @@ Keep humans in the loop for destructive actions
 
 Continuously tune controls and severity thresholds
 
-🧯 Disable After Testing
+### 🧯 Disable After Testing
 
 To avoid unexpected costs:
 
